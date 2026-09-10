@@ -4,7 +4,7 @@
   "description": "High-Capacity Cloud Storage Powered by Telegram MTProto Infrastructure",
   "main": "bin/teledrive.js",
   "bin": {
-    "teledrive": "./bin/teledrive.js"
+    "teledrive": "bin/teledrive.js"
   },
   "files": [
     "bin/",
@@ -28,7 +28,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/herliansyah/teledrive.git"
+    "url": "git+https://github.com/herliansyah/teledrive.git"
   },
   "bugs": {
     "url": "https://github.com/herliansyah/teledrive/issues"
