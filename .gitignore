@@ -1,6 +1,7 @@
 # Binaries
 /teledrive
 *.exe
+dist/
 
 # Databases
 *.db
