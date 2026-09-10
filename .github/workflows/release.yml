@@ -4,41 +4,22 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build and Release
+  release:
+    name: Build & Publish Release
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - os: linux
-            arch: amd64
-            ext: ""
-            archive: tar.gz
-          - os: linux
-            arch: arm64
-            ext: ""
-            archive: tar.gz
-          - os: darwin
-            arch: amd64
-            ext: ""
-            archive: tar.gz
-          - os: darwin
-            arch: arm64
-            ext: ""
-            archive: tar.gz
-          - os: windows
-            arch: amd64
-            ext: ".exe"
-            archive: zip
-
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -46,56 +27,49 @@ jobs:
           go-version: '1.22'
           check-latest: true
 
-      - name: Build binary
-        env:
-          CGO_ENABLED: 0
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
+      - name: Build and Package All Platforms
         run: |
-          mkdir -p bin
-          go build -ldflags="-s -w" -o bin/teledrive${{ matrix.ext }} ./cmd/teledrive
-
-      - name: Package archive
-        id: package
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          PKG_NAME="teledrive-${TAG_NAME}-${{ matrix.os }}-${{ matrix.arch }}"
-          mkdir -p dist
-          if [ "${{ matrix.archive }}" = "zip" ]; then
-            cd bin && zip -9 ../dist/${PKG_NAME}.zip teledrive${{ matrix.ext }} && cd ..
-            echo "asset=dist/${PKG_NAME}.zip" >> $GITHUB_OUTPUT
-          else
-            tar -czvf dist/${PKG_NAME}.tar.gz -C bin teledrive${{ matrix.ext }}
-            echo "asset=dist/${PKG_NAME}.tar.gz" >> $GITHUB_OUTPUT
+          TAG="${GITHUB_REF_NAME}"
+          if [ -z "$TAG" ]; then
+            TAG="v1.0.1"
           fi
+          echo "Building release for tag: $TAG"
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: teledrive-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist/*
+          mkdir -p bin dist
 
-  publish:
-    name: Publish GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all built artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-assets
-          merge-multiple: true
+          # 1. Linux AMD64
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/teledrive ./cmd/teledrive
+          tar -czvf "dist/teledrive-${TAG}-linux-amd64.tar.gz" -C bin teledrive
 
-      - name: Generate SHA-256 Checksums
-        run: |
-          cd release-assets
-          sha256sum * > sha256sums.txt
+          # 2. Linux ARM64
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o bin/teledrive ./cmd/teledrive
+          tar -czvf "dist/teledrive-${TAG}-linux-arm64.tar.gz" -C bin teledrive
+
+          # 3. macOS Intel (AMD64)
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o bin/teledrive ./cmd/teledrive
+          tar -czvf "dist/teledrive-${TAG}-darwin-amd64.tar.gz" -C bin teledrive
+
+          # 4. macOS Apple Silicon (ARM64)
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o bin/teledrive ./cmd/teledrive
+          tar -czvf "dist/teledrive-${TAG}-darwin-arm64.tar.gz" -C bin teledrive
+
+          # 5. Windows AMD64
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o bin/teledrive.exe ./cmd/teledrive
+          (cd bin && zip -9 "../dist/teledrive-${TAG}-windows-amd64.zip" teledrive.exe)
+
+          # 6. SHA-256 Checksums
+          cd dist
+          sha256sum teledrive-* > sha256sums.txt
           cat sha256sums.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: release-assets/*
+          files: dist/*
+          tag_name: ${{ github.ref_name }}
+          name: TeleDrive ${{ github.ref_name }}
           generate_release_notes: true
           draft: false
           prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
