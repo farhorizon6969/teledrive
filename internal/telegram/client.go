@@ -19,9 +19,10 @@ type ClientManager struct {
 	secretKey string
 	storage   *EncryptedSessionStorage
 
-	mu        sync.Mutex
-	channelID int64
-	accessHash int64
+	mu                  sync.Mutex
+	channelID           int64
+	accessHash          int64
+	configuredChannelID int64
 }
 
 // NewClientManager configures a new MTProto client instance with Safe Mode client headers.
@@ -74,6 +75,20 @@ func (m *ClientManager) SetStorageChannel(channelID, accessHash int64) {
 	defer m.mu.Unlock()
 	m.channelID = channelID
 	m.accessHash = accessHash
+}
+
+// SetConfiguredChannelID sets an explicit storage channel ID from configuration or env var.
+func (m *ClientManager) SetConfiguredChannelID(channelID int64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.configuredChannelID = channelID
+}
+
+// SetDB updates the database reference (e.g. after snapshot restoration).
+func (m *ClientManager) SetDB(database *db.DB) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.db = database
 }
 
 // StorageChannel returns the active storage channel channel_id and access_hash.

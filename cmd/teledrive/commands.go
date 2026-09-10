@@ -60,10 +60,13 @@ func runLogin(cfg *app.Config) {
 	}
 
 	mgr := telegram.NewClientManager(database, appID, appHash, cfg.SecretKey)
+	if cfg.StorageChannelID != 0 {
+		mgr.SetConfiguredChannelID(cfg.StorageChannelID)
+	}
 
 	ctx := context.Background()
 	err := mgr.Run(ctx, func(runCtx context.Context) error {
-		return mgr.AuthenticateInteractive(runCtx)
+		return mgr.AuthenticateInteractive(runCtx, reader, cfg.DBPath)
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Login error: %v\n", err)
@@ -96,6 +99,9 @@ func runServer(cfg *app.Config) {
 	}
 
 	mgr := telegram.NewClientManager(database, appID, appHash, cfg.SecretKey)
+	if cfg.StorageChannelID != 0 {
+		mgr.SetConfiguredChannelID(cfg.StorageChannelID)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -219,6 +225,9 @@ func runUpload(cfg *app.Config, args []string) {
 	}
 
 	mgr := telegram.NewClientManager(database, appID, appHash, cfg.SecretKey)
+	if cfg.StorageChannelID != 0 {
+		mgr.SetConfiguredChannelID(cfg.StorageChannelID)
+	}
 	limiter := telegram.NewSafeLimiter()
 
 	fileName := filepath.Base(filePath)
@@ -340,6 +349,9 @@ func runDownload(cfg *app.Config, args []string) {
 	docHash, _ := strconv.ParseInt(fileRecord.TelegramAccessHash, 10, 64)
 
 	mgr := telegram.NewClientManager(database, appID, appHash, cfg.SecretKey)
+	if cfg.StorageChannelID != 0 {
+		mgr.SetConfiguredChannelID(cfg.StorageChannelID)
+	}
 
 	fmt.Printf("Downloading %s (%.2f MB) to %s...\n", fileRecord.Name, float64(fileRecord.Size)/(1024*1024), outputPath)
 
@@ -417,6 +429,9 @@ func runBackup(cfg *app.Config) {
 	defer database.Close()
 
 	mgr := telegram.NewClientManager(database, appID, appHash, cfg.SecretKey)
+	if cfg.StorageChannelID != 0 {
+		mgr.SetConfiguredChannelID(cfg.StorageChannelID)
+	}
 	limiter := telegram.NewSafeLimiter()
 
 	ctx := context.Background()
@@ -440,7 +455,6 @@ func runBackup(cfg *app.Config) {
 func runRestore(cfg *app.Config) {
 	fmt.Printf("Restoring SQLite snapshot to %s from Telegram...\n", cfg.DBPath)
 
-	// In restore, we may start with a blank database
 	database := openDatabase(cfg)
 
 	appID := cfg.TelegramAppID
@@ -456,8 +470,8 @@ func runRestore(cfg *app.Config) {
 		}
 	}
 
+	reader := bufio.NewReader(os.Stdin)
 	if appID == 0 || appHash == "" {
-		reader := bufio.NewReader(os.Stdin)
 		fmt.Print("Enter your Telegram App ID: ")
 		val, _ := reader.ReadString('\n')
 		appID, _ = strconv.Atoi(strings.TrimSpace(val))
@@ -467,12 +481,54 @@ func runRestore(cfg *app.Config) {
 	}
 
 	mgr := telegram.NewClientManager(database, appID, appHash, cfg.SecretKey)
+	if cfg.StorageChannelID != 0 {
+		mgr.SetConfiguredChannelID(cfg.StorageChannelID)
+	}
 
 	ctx := context.Background()
 	err := mgr.Run(ctx, func(runCtx context.Context) error {
-		if err := mgr.EnsureStorageChannel(runCtx); err != nil {
-			return err
+		storedID, _ := database.GetSetting("storage_channel_id")
+		storedHash, _ := database.GetSetting("storage_channel_hash")
+
+		if storedID != "" && storedHash != "" {
+			cID, _ := strconv.ParseInt(storedID, 10, 64)
+			cHash, _ := strconv.ParseInt(storedHash, 10, 64)
+			mgr.SetStorageChannel(cID, cHash)
+		} else if cfg.StorageChannelID != 0 {
+			hash, err := mgr.ResolveChannelByID(runCtx, cfg.StorageChannelID)
+			if err != nil {
+				return fmt.Errorf("could not resolve configured channel ID %d: %w", cfg.StorageChannelID, err)
+			}
+			mgr.SetStorageChannel(cfg.StorageChannelID, hash)
+		} else {
+			fmt.Println("Searching for Storage Channel 'TeleDrive Vault' on Telegram...")
+			candidates, err := mgr.DiscoverStorageChannels(runCtx)
+			if err != nil || len(candidates) == 0 {
+				return fmt.Errorf("no Storage Channel 'TeleDrive Vault' found in your Telegram account to restore from")
+			}
+			var chosen *telegram.DiscoveredChannel
+			if len(candidates) == 1 {
+				chosen = &candidates[0]
+			} else {
+				fmt.Printf("\nFound %d Storage Channels:\n", len(candidates))
+				for i, c := range candidates {
+					snapText := "no snapshots"
+					if c.SnapshotCount > 0 {
+						snapText = fmt.Sprintf("%d snapshot(s), latest: %s", c.SnapshotCount, c.LatestSnapshot.CreatedAt.Format("2006-01-02 15:04"))
+					}
+					fmt.Printf("  [%d] Channel ID: %d | Created: %s | %s\n", i+1, c.ID, c.CreatedAt.Format("2006-01-02"), snapText)
+				}
+				fmt.Printf("Select channel to restore from (1-%d): ", len(candidates))
+				choiceStr, _ := reader.ReadString('\n')
+				idx, _ := strconv.Atoi(strings.TrimSpace(choiceStr))
+				if idx < 1 || idx > len(candidates) {
+					idx = 1
+				}
+				chosen = &candidates[idx-1]
+			}
+			mgr.SetStorageChannel(chosen.ID, chosen.AccessHash)
 		}
+
 		// Close database connection before overwriting file
 		database.Close()
 		return mgr.RestoreLatestSnapshot(runCtx, cfg.DBPath)

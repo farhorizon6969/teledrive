@@ -66,13 +66,17 @@ func (m *ClientManager) UploadSnapshot(ctx context.Context, gzPath string, limit
 	return msgID, nil
 }
 
-// ListSnapshots retrieves the Snapshot History from the Storage Channel.
+// ListSnapshots retrieves the Snapshot History from the active Storage Channel.
 func (m *ClientManager) ListSnapshots(ctx context.Context) ([]SnapshotInfo, error) {
 	channelID, accessHash, err := m.StorageChannel()
 	if err != nil {
 		return nil, err
 	}
+	return m.ListSnapshotsForPeer(ctx, channelID, accessHash)
+}
 
+// ListSnapshotsForPeer retrieves snapshot history for a specific channel peer.
+func (m *ClientManager) ListSnapshotsForPeer(ctx context.Context, channelID, accessHash int64) ([]SnapshotInfo, error) {
 	peer := &tg.InputPeerChannel{
 		ChannelID:  channelID,
 		AccessHash: accessHash,

@@ -53,14 +53,14 @@ func (ConsoleAuthenticator) SignUp(ctx context.Context) (auth.UserInfo, error) {
 	return auth.UserInfo{}, fmt.Errorf("sign-up not supported: please register your account via official Telegram app first")
 }
 
-// AuthenticateInteractive performs terminal-based authentication and saves encrypted session.
-func (m *ClientManager) AuthenticateInteractive(ctx context.Context) error {
+// AuthenticateInteractive performs terminal-based authentication and initiates channel onboarding.
+func (m *ClientManager) AuthenticateInteractive(ctx context.Context, reader *bufio.Reader, destDBPath string) error {
 	flow := auth.NewFlow(ConsoleAuthenticator{}, auth.SendCodeOptions{})
 
 	status, err := m.client.Auth().Status(ctx)
 	if err == nil && status.Authorized {
 		fmt.Println("✓ Account is already authenticated in database session.")
-		return m.EnsureStorageChannel(ctx)
+		return m.OnboardStorageChannelInteractive(ctx, reader, destDBPath)
 	}
 
 	if err := m.client.Auth().IfNecessary(ctx, flow); err != nil {
@@ -68,10 +68,10 @@ func (m *ClientManager) AuthenticateInteractive(ctx context.Context) error {
 	}
 
 	fmt.Println("✓ MTProto authentication successful. Session encrypted and stored in SQLite.")
-	return m.EnsureStorageChannel(ctx)
+	return m.OnboardStorageChannelInteractive(ctx, reader, destDBPath)
 }
 
-// EnsureStorageChannel verifies or creates the private Storage Channel "TeleDrive Vault".
+// EnsureStorageChannel verifies, discovers, or creates the private Storage Channel "TeleDrive Vault".
 func (m *ClientManager) EnsureStorageChannel(ctx context.Context) error {
 	storedID, err := m.db.GetSetting("storage_channel_id")
 	storedHash, errHash := m.db.GetSetting("storage_channel_hash")
@@ -84,39 +84,40 @@ func (m *ClientManager) EnsureStorageChannel(ctx context.Context) error {
 		return nil
 	}
 
-	fmt.Println("Creating private Telegram Storage Channel 'TeleDrive Vault'...")
-	updates, err := m.api.ChannelsCreateChannel(ctx, &tg.ChannelsCreateChannelRequest{
-		Broadcast: true,
-		Title:     "TeleDrive Vault",
-		About:     "Private cloud storage object vault managed by TeleDrive. DO NOT delete or rename.",
-	})
-	if err != nil {
-		return fmt.Errorf("failed to create storage channel: %w", err)
-	}
-
-	// Extract created channel information from updates
-	var channelID int64
-	var accessHash int64
-
-	switch u := updates.(type) {
-	case *tg.Updates:
-		for _, chat := range u.Chats {
-			if c, ok := chat.(*tg.Channel); ok {
-				channelID = c.ID
-				accessHash = c.AccessHash
-				break
-			}
+	if m.configuredChannelID != 0 {
+		hash, err := m.ResolveChannelByID(ctx, m.configuredChannelID)
+		if err == nil {
+			m.SetStorageChannel(m.configuredChannelID, hash)
+			_ = m.db.SetSetting("storage_channel_id", strconv.FormatInt(m.configuredChannelID, 10))
+			_ = m.db.SetSetting("storage_channel_hash", strconv.FormatInt(hash, 10))
+			fmt.Printf("✓ Bound to configured Storage Channel (ID: %d)\n", m.configuredChannelID)
+			return nil
 		}
 	}
 
-	if channelID == 0 {
-		return fmt.Errorf("could not extract created channel ID from Telegram response")
+	candidates, err := m.DiscoverStorageChannels(ctx)
+	if err == nil && len(candidates) == 1 {
+		cand := candidates[0]
+		m.SetStorageChannel(cand.ID, cand.AccessHash)
+		_ = m.db.SetSetting("storage_channel_id", strconv.FormatInt(cand.ID, 10))
+		_ = m.db.SetSetting("storage_channel_hash", strconv.FormatInt(cand.AccessHash, 10))
+		fmt.Printf("✓ Auto-discovered existing Storage Channel (ID: %d)\n", cand.ID)
+		return nil
+	} else if err == nil && len(candidates) > 1 {
+		// ponytail: In headless mode with duplicate channels, pick the one with the most snapshots.
+		best := candidates[0]
+		for _, c := range candidates[1:] {
+			if c.SnapshotCount > best.SnapshotCount {
+				best = c
+			}
+		}
+		m.SetStorageChannel(best.ID, best.AccessHash)
+		_ = m.db.SetSetting("storage_channel_id", strconv.FormatInt(best.ID, 10))
+		_ = m.db.SetSetting("storage_channel_hash", strconv.FormatInt(best.AccessHash, 10))
+		fmt.Printf("✓ Auto-discovered Storage Channel (ID: %d, %d snapshots)\n", best.ID, best.SnapshotCount)
+		return nil
 	}
 
-	m.SetStorageChannel(channelID, accessHash)
-	_ = m.db.SetSetting("storage_channel_id", strconv.FormatInt(channelID, 10))
-	_ = m.db.SetSetting("storage_channel_hash", strconv.FormatInt(accessHash, 10))
-
-	fmt.Printf("✓ Created private Storage Channel 'TeleDrive Vault' (ID: %d)\n", channelID)
-	return nil
+	_, _, err = m.CreateStorageChannel(ctx)
+	return err
 }

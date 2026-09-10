@@ -75,7 +75,7 @@ npx teledrive login
 2. Enter your phone number in international format (e.g., `+6281234567890`).
 3. Enter the 5-digit verification code sent directly to your Telegram app.
 4. If Two-Factor Authentication (2FA) is active, enter your Cloud Password.
-5. TeleDrive automatically creates a private channel named `TeleDrive Vault` where all uploaded files are stored safely.
+5. **Storage Channel Discovery & Onboarding**: TeleDrive automatically scans your Telegram account for an existing `TeleDrive Vault` channel. If an existing channel is detected, it prompts you to link it and optionally restore your latest database snapshot right away. If no channel exists yet, it creates a new private `TeleDrive Vault` channel automatically.
 
 #### Step 2: Launching the Web Dashboard
 
@@ -138,8 +138,11 @@ TeleDrive is engineered with strict safeguards to protect your primary Telegram 
 #### Q: Is my data private? Can other people see my files?
 No. All files are uploaded into your own private Telegram channel (`TeleDrive Vault`). Only the authenticated Telegram account has access to this channel. Share links are only accessible if you explicitly generate them.
 
-#### Q: What happens if my server crashes or I move to another VPS?
-Because your SQLite database can be backed up directly to your Telegram channel (`teledrive backup` or the automated 24-hour snapshot), you can restore your entire drive on a fresh server simply by running `./teledrive login` and `./teledrive restore`.
+#### Q: What happens if my server crashes or I move to another PC/VPS?
+Because your SQLite metadata database is automatically snapshotted to your Telegram channel (`teledrive backup` or automated snapshots), moving to a new computer is seamless:
+1. Run `./teledrive login` on the new machine.
+2. TeleDrive automatically discovers your existing `TeleDrive Vault` channel and prompts to restore your latest database snapshot.
+3. Confirm `[Y]`, and your files, virtual folders, and configuration are restored instantly without extra steps!
 
 #### Q: How do I change the admin dashboard password?
 Set the `TELEDRIVE_ADMIN_PASSWORD` environment variable before launching the server:
@@ -220,7 +223,7 @@ npx teledrive login
 2. Masukkan nomor telepon Telegram dalam format internasional (contoh: `+6281234567890`).
 3. Masukkan kode login 5 digit yang dikirimkan ke aplikasi Telegram Anda.
 4. Jika akun Anda menggunakan Two-Factor Authentication (2FA), masukkan Cloud Password Anda.
-5. TeleDrive akan secara otomatis membuat channel pribadi bernama `TeleDrive Vault` sebagai brankas penyimpanan file Anda.
+5. **Deteksi Otomatis & Onboarding Storage Channel**: TeleDrive secara cerdas memindai dialog akun Telegram Anda mencari channel `TeleDrive Vault` yang sudah ada. Jika channel lama ditemukan, TeleDrive menawarkan untuk langsung menyambungkannya dan memulihkan snapshot database terbaru. Jika belum pernah dibuat, TeleDrive otomatis membuat channel privat baru `TeleDrive Vault`.
 
 #### Langkah 2: Menjalankan Server Web Dashboard
 
@@ -283,8 +286,11 @@ TeleDrive dirancang khusus dengan sistem pertahanan berlapis agar akun utama Tel
 #### T: Apakah file saya bisa dilihat orang lain di Telegram?
 Tidak. Semua file disimpan di channel pribadi milik Anda sendiri (`TeleDrive Vault`). Tidak ada orang lain yang memiliki akses ke channel tersebut kecuali Anda sendiri atau melalui tautan publik yang sengaja Anda buat.
 
-#### T: Bagaimana jika komputer/VPS saya rusak atau saya ingin pindah server?
-Sangat mudah! Karena database metadata dapat dicadangkan langsung ke Telegram (`teledrive backup` atau snapshot web otomatis), Anda cukup mengunduh binary TeleDrive di komputer baru, jalankan `./teledrive login`, lalu jalankan `./teledrive restore`. Seluruh drive Anda akan kembali seperti semula.
+#### T: Bagaimana jika komputer/VPS saya rusak atau saya ingin pindah ke PC baru?
+Sangat mudah dan otomatis! Karena database metadata SQLite Anda dicadangkan ke channel Telegram:
+1. Jalankan `./teledrive login` di PC baru.
+2. TeleDrive secara otomatis mendeteksi channel `TeleDrive Vault` lama Anda dan menawarkan opsi untuk langsung memulihkan snapshot database terbaru.
+3. Tekan `[Y]`, seluruh struktur folder dan file Anda akan kembali seperti semula seketika!
 
 #### T: Bagaimana cara mengganti password admin web?
 Cukup atur variabel lingkungan `TELEDRIVE_ADMIN_PASSWORD` sebelum menjalankan server:
