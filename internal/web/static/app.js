@@ -54,7 +54,8 @@ const ICONS = {
     zap: `<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>`,
     shield: `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>`,
     database: `<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>`,
-    "rotate-ccw": `<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>`
+    "rotate-ccw": `<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>`,
+    "help-circle": `<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>`
 };
 
 function getIcon(name, extraClasses = "") {
@@ -1135,6 +1136,17 @@ function openQrModal(url, title = "Share Link") {
 
 function closeQrModal() {
     const modal = document.getElementById("qr-modal");
+    if (modal) modal.style.display = "none";
+}
+
+// --- Help & Guide Modal ---
+function openHelpModal() {
+    const modal = document.getElementById("help-modal");
+    if (modal) modal.style.display = "flex";
+}
+
+function closeHelpModal() {
+    const modal = document.getElementById("help-modal");
     if (modal) modal.style.display = "none";
 }
 

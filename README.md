@@ -76,12 +76,18 @@ Obtain your personal `API_ID` and `API_HASH` from [my.telegram.org](https://my.t
 ./teledrive login
 ```
 
+<div align="center">
+  <img src="docs/assets/teledrive-login.png" alt="TeleDrive Login Terminal Wizard" width="600" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin: 12px 0;">
+</div>
+
 The wizard will guide you through:
 1. Entering your `API_ID` and `API_HASH`.
 2. Entering your Telegram phone number.
 3. Submitting the confirmation code sent to your Telegram app.
 4. Submitting your 2FA Cloud Password (if enabled).
 5. Auto-creating the private `TeleDrive Vault` storage channel.
+
+> 💡 **New to TeleDrive?** Read the [Full User Guide & How It Works (docs/USER_GUIDE.md)](docs/USER_GUIDE.md) for detailed architecture explanations, visual walkthroughs, and security practices.
 
 #### 2. Start the Web Dashboard
 
@@ -181,7 +187,14 @@ Dapatkan `API_ID` dan `API_HASH` Anda dari [my.telegram.org](https://my.telegram
 ```bash
 ./teledrive login
 ```
+
+<div align="center">
+  <img src="docs/assets/teledrive-login.png" alt="Wizard Login Terminal TeleDrive" width="600" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin: 12px 0;">
+</div>
+
 Ikuti petunjuk di layar untuk memasukkan nomor telepon, kode OTP dari Telegram, dan password 2FA Anda.
+
+> 💡 **Butuh panduan lengkap dan penjelasan cara kerja sistem?** Baca [Panduan Pengguna Lengkap & Cara Kerja (docs/USER_GUIDE.md)](docs/USER_GUIDE.md).
 
 #### 2. Jalankan Server Web Dashboard
 ```bash
@@ -211,6 +224,7 @@ Buka browser di **`http://localhost:8080`** (Password admin: `admin123`).
 
 ### 📚 Dokumentasi Teknis Lanjutan
 
+- [docs/USER_GUIDE.md](docs/USER_GUIDE.md) — Panduan lengkap pengguna, arsitektur, dan cara kerja TeleDrive.
 - [CONTEXT.md](CONTEXT.md) — Glosarium kanonik konsep domain TeleDrive.
 - [ARCHITECTURE.md](ARCHITECTURE.md) — Diagram alur data upload, streaming HTTP 206, dan skema SQLite.
 - [SECURITY.md](SECURITY.md) — Panduan keamanan, enkripsi session, dan mitigasi banned Telegram.

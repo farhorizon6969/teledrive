@@ -228,17 +228,21 @@ teledrive/
 ├── ARCHITECTURE.md
 ├── SECURITY.md
 ├── MILESTONES.md
-├── docs/adr/
-│   ├── 0001-storage-channel-target.md
-│   ├── 0002-pure-go-mtproto-client.md
-│   ├── 0003-pass-through-streaming.md
-│   ├── 0004-modernc-sqlite-pure-go.md
-│   ├── 0005-stdlib-net-http.md
-│   ├── 0006-chunked-resumable-http-upload.md
-│   ├── 0007-aes-gcm-session-encryption.md
-│   ├── 0008-primary-account-tos-safe-mode.md
-│   ├── 0009-zero-build-embedded-modern-ui.md
-│   └── 0010-database-snapshots-and-rolling-retention.md
+├── docs/
+│   ├── USER_GUIDE.md
+│   ├── assets/
+│   │   └── teledrive-login.png
+│   └── adr/
+│       ├── 0001-storage-channel-target.md
+│       ├── 0002-pure-go-mtproto-client.md
+│       ├── 0003-pass-through-streaming.md
+│       ├── 0004-modernc-sqlite-pure-go.md
+│       ├── 0005-stdlib-net-http.md
+│       ├── 0006-chunked-resumable-http-upload.md
+│       ├── 0007-aes-gcm-session-encryption.md
+│       ├── 0008-primary-account-tos-safe-mode.md
+│       ├── 0009-zero-build-embedded-modern-ui.md
+│       └── 0010-database-snapshots-and-rolling-retention.md
 ├── cmd/
 │   └── teledrive/
 │       └── main.go              # CLI router (server, login, upload, list, backup)
