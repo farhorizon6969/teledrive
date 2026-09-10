@@ -11,6 +11,8 @@ import (
 const banner = `
 =====================================================
   TeleDrive - Cloud Storage Powered by Telegram MTProto
+  Created by Herliansyah (https://github.com/herliansyah)
+  License: MIT | Repository: https://github.com/herliansyah/teledrive
 =====================================================
 `
 
@@ -23,8 +25,11 @@ func main() {
 	cfg := app.LoadConfig()
 
 	switch os.Args[1] {
-	case "version":
-		fmt.Println("TeleDrive v1.0.0 (Go static single binary)")
+	case "version", "--version", "-v":
+		fmt.Println("TeleDrive v1.1.0")
+		fmt.Println("Created by Herliansyah (https://github.com/herliansyah)")
+		fmt.Println("Licensed under the MIT License")
+		fmt.Println("Repository: https://github.com/herliansyah/teledrive")
 	case "login":
 		runLogin(cfg)
 	case "server":

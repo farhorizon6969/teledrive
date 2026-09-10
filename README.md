@@ -7,8 +7,10 @@
 *Turn your Telegram account into a secure, unlimited personal cloud drive with a Google Drive-like Web Dashboard and CLI.*
 
 [![Go Version](https://img.shields.io/badge/Go-1.22%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-blue)](https://github.com/)
+[![Author](https://img.shields.io/badge/Author-Herliansyah-purple?style=flat&logo=github)](https://github.com/herliansyah)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![GitHub](https://img.shields.io/badge/GitHub-herliansyah%2Fteledrive-181717?style=flat&logo=github)](https://github.com/herliansyah/teledrive)
+[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-blue)](https://github.com/herliansyah/teledrive)
 [![Pure Go](https://img.shields.io/badge/CGO-Zero%20(Pure%20Go)-orange)](https://modernc.org/sqlite)
 
 [English](#english) &bull; [Bahasa Indonesia](#bahasa-indonesia)
@@ -131,6 +133,13 @@ Open your browser and navigate to:
 
 ---
 
+### 👤 Author & Credits
+
+Developed and maintained by **Herliansyah**:
+- **Creator Profile**: [@herliansyah](https://github.com/herliansyah)
+- **Source Code**: [https://github.com/herliansyah/teledrive](https://github.com/herliansyah/teledrive)
+- **License**: Released under the [MIT License](LICENSE). Open-source, free for personal and educational use.
+
 <hr style="margin: 40px 0;">
 
 <a name="bahasa-indonesia"></a>
@@ -210,5 +219,10 @@ Buka browser di **`http://localhost:8080`** (Password admin: `admin123`).
 
 ---
 
-### 📄 Lisensi
-Didistribusikan di bawah Lisensi MIT. Bebas digunakan dan dimodifikasi untuk keperluan personal maupun edukasi.
+### 👤 Pembuat & Lisensi
+
+Diciptakan dan dikembangkan oleh **Herliansyah**:
+- **Profil GitHub**: [@herliansyah](https://github.com/herliansyah)
+- **Repositori Resmi**: [https://github.com/herliansyah/teledrive](https://github.com/herliansyah/teledrive)
+- **Lisensi**: Didistribusikan di bawah [Lisensi MIT](LICENSE). Bebas digunakan, dipelajari, dan dimodifikasi untuk keperluan personal maupun edukasi.
+
