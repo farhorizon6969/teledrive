@@ -3,9 +3,12 @@ package web
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -147,4 +150,97 @@ func TestWebServer_AuthAndFolderAPI(t *testing.T) {
 		t.Fatalf("Expected 204 No Content for delete share, got %d", rec.Code)
 	}
 }
+
+func TestWebServer_SnapshotsAPI(t *testing.T) {
+	tempDir := t.TempDir()
+	dbPath := filepath.Join(tempDir, "test.db")
+
+	database, err := db.Open(dbPath)
+	if err != nil {
+		t.Fatalf("Open db failed: %v", err)
+	}
+	defer database.Close()
+
+	cfg := &app.Config{
+		Port:          "8080",
+		DBPath:        dbPath,
+		SecretKey:     "test-secret-key-32b",
+		AdminPassword: "supersecretpassword",
+	}
+
+	server, err := NewServer(cfg, database, nil)
+	if err != nil {
+		t.Fatalf("NewServer failed: %v", err)
+	}
+
+	authCookie := &http.Cookie{Name: "teledrive_session", Value: "authenticated"}
+
+	// 1. GET /api/snapshots with nil tg -> returns 200 OK and []
+	req := httptest.NewRequest("GET", "/api/snapshots", nil)
+	req.AddCookie(authCookie)
+	rec := httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for snapshots list, got %d", rec.Code)
+	}
+	if strings.TrimSpace(rec.Body.String()) != "[]" {
+		t.Fatalf("Expected empty json array [], got %s", rec.Body.String())
+	}
+
+	// 2. POST /api/snapshots with nil tg -> returns 400 Bad Request
+	req = httptest.NewRequest("POST", "/api/snapshots", nil)
+	req.AddCookie(authCookie)
+	rec = httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("Expected 400 Bad Request without TG, got %d", rec.Code)
+	}
+
+	// 3. POST /api/snapshots/invalid/restore -> returns 400 Bad Request
+	req = httptest.NewRequest("POST", "/api/snapshots/abc/restore", nil)
+	req.AddCookie(authCookie)
+	rec = httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("Expected 400 Bad Request for invalid snapshot ID, got %d", rec.Code)
+	}
+
+	// 4. Create snapshot locally and test /api/snapshots/upload-restore
+	gzPath, err := database.CreateSnapshot()
+	if err != nil {
+		t.Fatalf("CreateSnapshot failed: %v", err)
+	}
+	defer os.Remove(gzPath)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("snapshot", filepath.Base(gzPath))
+	if err != nil {
+		t.Fatalf("CreateFormFile failed: %v", err)
+	}
+	gzFile, err := os.Open(gzPath)
+	if err != nil {
+		t.Fatalf("Open gzPath failed: %v", err)
+	}
+	_, _ = io.Copy(part, gzFile)
+	gzFile.Close()
+	writer.Close()
+
+	req = httptest.NewRequest("POST", "/api/snapshots/upload-restore", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req.AddCookie(authCookie)
+	rec = httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("Expected 200 OK for upload-restore, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if !strings.Contains(rec.Body.String(), "restored successfully") {
+		t.Fatalf("Expected success message in response, got: %s", rec.Body.String())
+	}
+}
+
 

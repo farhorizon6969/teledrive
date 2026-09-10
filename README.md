@@ -46,7 +46,7 @@
   - Automated defensive `FLOOD_WAIT_X` backoff without crashing or retrying aggressively.
   - Strictly private Storage Channel (`TeleDrive Vault`) with zero external members.
 - **🔐 Military-Grade Security at Rest**: Telegram MTProto session strings (`auth_key`) are encrypted at rest in SQLite using **AES-256-GCM** with SHA-256 key derivation.
-- **💾 Disaster Recovery & Auto-Healing**: Export compressed SQLite snapshots to your Telegram Storage Channel with pinned message recovery (`teledrive backup` and `teledrive restore`).
+- **💾 Automated Snapshots & Point-in-Time Restore**: Online SQLite snapshots stored directly in your private Telegram Storage Channel with 5-snapshot rolling retention, 24-hour background scheduler, automated snapshot on graceful shutdown, web-based point-in-time restore, direct `.db.gz` offsite downloads, and local upload-and-restore.
 
 ---
 
@@ -170,7 +170,7 @@ Developed and maintained by **Herliansyah**:
   - Penanganan jeda otomatis `FLOOD_WAIT` dari server Telegram.
   - Channel storage berstatus **Private** dan terisolasi (0 anggota luar).
 - **Keamanan Data**: Kunci session string MTProto dienkripsi menggunakan algoritma **AES-256-GCM** sebelum disimpan di database.
-- **Disaster Recovery**: Backup database metadata SQLite otomatis ke Telegram Storage Channel (`teledrive backup` & `teledrive restore`).
+- **Disaster Recovery & Snapshots**: Snapshot online SQLite otomatis (setiap 24 jam dan saat shutdown) tersimpan di Telegram Storage Channel dengan retensi bergulir 5 snapshot, riwayat snapshot di dashboard web, pemulihan point-in-time, serta unduh dan unggah backup database lokal (`teledrive backup` & `teledrive restore`).
 
 ---
 

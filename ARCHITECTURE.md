@@ -237,7 +237,8 @@ teledrive/
 │   ├── 0006-chunked-resumable-http-upload.md
 │   ├── 0007-aes-gcm-session-encryption.md
 │   ├── 0008-primary-account-tos-safe-mode.md
-│   └── 0009-zero-build-embedded-modern-ui.md
+│   ├── 0009-zero-build-embedded-modern-ui.md
+│   └── 0010-database-snapshots-and-rolling-retention.md
 ├── cmd/
 │   └── teledrive/
 │       └── main.go              # CLI router (server, login, upload, list, backup)

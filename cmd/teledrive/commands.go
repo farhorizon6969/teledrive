@@ -135,6 +135,9 @@ func runServer(cfg *app.Config) {
 		return
 	}
 
+	// Start background periodic snapshot scheduler
+	srv.StartPeriodicBackup(ctx)
+
 	httpServer := &http.Server{
 		Handler: srv,
 	}
@@ -145,9 +148,10 @@ func runServer(cfg *app.Config) {
 
 	go func() {
 		<-sigChan
-		fmt.Println("\nReceived shutdown signal. Performing WAL checkpoint and shutting down...")
-		shutdownCtx, sCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		fmt.Println("\nReceived shutdown signal. Creating final database snapshot & shutting down...")
+		shutdownCtx, sCancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer sCancel()
+		_ = srv.PerformAutomatedSnapshot(shutdownCtx)
 		_ = httpServer.Shutdown(shutdownCtx)
 		cancel()
 	}()

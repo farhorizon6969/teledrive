@@ -1,11 +1,13 @@
 package web
 
 import (
+	"context"
 	"embed"
 	"fmt"
 	"html/template"
 	"io/fs"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -24,6 +26,10 @@ type Server struct {
 	limiter   *telegram.SafeLimiter
 	mux       *http.ServeMux
 	templates *template.Template
+
+	// Concurrency safety for hot-restore and snapshot operations
+	dbMu       sync.RWMutex
+	snapshotMu sync.Mutex
 
 	// In-memory unlock cache for password-protected share tokens
 	unlockedMu     sync.RWMutex
@@ -88,6 +94,14 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("POST /s/{token}/unlock", s.handleShareUnlock)
 	s.mux.HandleFunc("GET /s/{token}/stream", s.handleShareStream)
 	s.mux.HandleFunc("GET /s/{token}/download", s.handleShareDownload)
+
+	// Database Snapshots & Point-in-Time Recovery
+	s.mux.HandleFunc("GET /api/snapshots", s.authMiddleware(s.handleListSnapshots))
+	s.mux.HandleFunc("POST /api/snapshots", s.authMiddleware(s.handleCreateSnapshot))
+	s.mux.HandleFunc("POST /api/snapshots/{id}/restore", s.authMiddleware(s.handleRestoreSnapshot))
+	s.mux.HandleFunc("GET /api/snapshots/{id}/download", s.authMiddleware(s.handleDownloadSnapshot))
+	s.mux.HandleFunc("DELETE /api/snapshots/{id}", s.authMiddleware(s.handleDeleteSnapshot))
+	s.mux.HandleFunc("POST /api/snapshots/upload-restore", s.authMiddleware(s.handleUploadRestoreSnapshot))
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -147,3 +161,61 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleDashboard(w http.ResponseWriter, r *http.Request) {
 	_ = s.templates.ExecuteTemplate(w, "index.html", nil)
 }
+
+// StartPeriodicBackup starts a background scheduler that creates and uploads
+// a Database Snapshot every 24 hours (or configured interval) with automatic rolling retention.
+func (s *Server) StartPeriodicBackup(ctx context.Context) {
+	interval := 24 * time.Hour
+	if envInterval := os.Getenv("TELEDRIVE_BACKUP_INTERVAL"); envInterval != "" {
+		if d, err := time.ParseDuration(envInterval); err == nil && d >= time.Minute {
+			interval = d
+		}
+	}
+
+	ticker := time.NewTicker(interval)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				ticker.Stop()
+				return
+			case <-ticker.C:
+				if s.tg == nil {
+					continue
+				}
+				if err := s.PerformAutomatedSnapshot(ctx); err != nil {
+					fmt.Printf("[Periodic Backup] Warning: automated snapshot failed: %v\n", err)
+				} else {
+					fmt.Println("[Periodic Backup] Automated snapshot successfully created and retention applied")
+				}
+			}
+		}
+	}()
+}
+
+// PerformAutomatedSnapshot creates a point-in-time snapshot, uploads it to Telegram, and prunes older snapshots.
+func (s *Server) PerformAutomatedSnapshot(ctx context.Context) error {
+	if s.tg == nil {
+		return fmt.Errorf("telegram client manager is not initialized")
+	}
+
+	s.snapshotMu.Lock()
+	defer s.snapshotMu.Unlock()
+
+	s.dbMu.RLock()
+	gzPath, err := s.db.CreateSnapshot()
+	s.dbMu.RUnlock()
+	if err != nil {
+		return fmt.Errorf("create snapshot: %w", err)
+	}
+	defer os.Remove(gzPath)
+
+	return s.tg.Run(ctx, func(runCtx context.Context) error {
+		if err := s.tg.EnsureStorageChannel(runCtx); err != nil {
+			return err
+		}
+		_, err := s.tg.UploadSnapshot(runCtx, gzPath, s.limiter)
+		return err
+	})
+}
+

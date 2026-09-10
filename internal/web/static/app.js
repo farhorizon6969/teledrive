@@ -52,7 +52,9 @@ const ICONS = {
     lock: `<rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>`,
     menu: `<line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="18" x2="20" y2="18"/>`,
     zap: `<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>`,
-    shield: `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>`
+    shield: `<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>`,
+    database: `<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/>`,
+    "rotate-ccw": `<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>`
 };
 
 function getIcon(name, extraClasses = "") {
@@ -130,15 +132,18 @@ function switchTab(tab) {
 
     const driveContainer = document.getElementById("drive-content-container");
     const sharesContainer = document.getElementById("shares-content-container");
+    const snapshotsContainer = document.getElementById("snapshots-content-container");
+
+    if (driveContainer) driveContainer.style.display = (tab === "drive") ? "block" : "none";
+    if (sharesContainer) sharesContainer.style.display = (tab === "shares") ? "block" : "none";
+    if (snapshotsContainer) snapshotsContainer.style.display = (tab === "snapshots") ? "block" : "none";
 
     if (tab === "drive") {
-        if (driveContainer) driveContainer.style.display = "block";
-        if (sharesContainer) sharesContainer.style.display = "none";
         loadDriveContent();
     } else if (tab === "shares") {
-        if (driveContainer) driveContainer.style.display = "none";
-        if (sharesContainer) sharesContainer.style.display = "block";
         loadSharesContent();
+    } else if (tab === "snapshots") {
+        loadSnapshotsContent();
     }
 }
 
@@ -583,6 +588,189 @@ function confirmRevokeShare(id, fileName) {
                 loadSharesContent();
             } catch (err) {
                 showToast(err.message, "error");
+            }
+        }
+    });
+}
+
+// --- Database Snapshots & Point-in-Time Restore ---
+async function loadSnapshotsContent() {
+    try {
+        const res = await fetch("/api/snapshots");
+        if (!res.ok) throw new Error("Failed to load snapshots");
+        const snapshots = await res.json() || [];
+
+        const tbody = document.getElementById("snapshots-table-body");
+        const emptyState = document.getElementById("empty-snapshots-state");
+
+        if (snapshots.length === 0) {
+            if (emptyState) emptyState.style.display = "flex";
+            if (tbody) tbody.innerHTML = "";
+            return;
+        }
+
+        if (emptyState) emptyState.style.display = "none";
+        if (!tbody) return;
+
+        tbody.innerHTML = snapshots.map(s => {
+            const statusBadge = s.is_pinned
+                ? `<span style="color: var(--warning); font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;">Pinned</span>`
+                : `<span style="color: var(--text-muted); font-size: 0.8rem;">Archived</span>`;
+
+            return `
+                <tr>
+                    <td>
+                        <div class="table-name-cell">
+                            <span style="color: var(--primary);">${getIcon("database")}</span>
+                            <span style="font-weight: 600; font-family: monospace; font-size: 0.85rem;">${escapeHtml(s.file_name)}</span>
+                        </div>
+                    </td>
+                    <td>${formatSize(s.size)}</td>
+                    <td><span style="font-family: monospace; font-size: 0.85rem; color: var(--text-secondary);">#${s.message_id}</span></td>
+                    <td>${formatDateTime(s.created_at)}</td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                            <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem; color: var(--warning);" onclick="confirmRestoreSnapshot(${s.message_id}, '${escapeHtml(s.file_name)}')" title="Restore this snapshot">
+                                ${getIcon("rotate-ccw", "icon-sm")} Restore
+                            </button>
+                            <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.75rem;" onclick="downloadSnapshot(${s.message_id})" title="Download .db.gz">
+                                ${getIcon("download", "icon-sm")} Download
+                            </button>
+                            <button class="btn-icon btn-danger" style="padding: 4px 6px;" onclick="confirmDeleteSnapshot(${s.message_id}, '${escapeHtml(s.file_name)}')" title="Delete snapshot">
+                                ${getIcon("trash-2", "icon-sm")}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+    } catch (err) {
+        showToast("Failed to fetch snapshots: " + err.message, "error");
+    }
+}
+
+async function createSnapshotNow() {
+    const btn = document.getElementById("btn-create-snapshot");
+    const textSpan = document.getElementById("create-snapshot-text");
+    if (btn) btn.disabled = true;
+    if (textSpan) textSpan.innerText = "Creating snapshot...";
+
+    try {
+        const res = await fetch("/api/snapshots", { method: "POST" });
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(errText || "Failed to create snapshot");
+        }
+        showToast("Snapshot created and uploaded to Telegram Storage Channel!", "success");
+        await loadSnapshotsContent();
+    } catch (err) {
+        showToast("Snapshot error: " + err.message, "error");
+    } finally {
+        if (btn) btn.disabled = false;
+        if (textSpan) textSpan.innerText = "Create Snapshot Now";
+    }
+}
+
+function confirmRestoreSnapshot(id, fileName) {
+    showConfirmDialog({
+        title: "Point-in-Time Restore",
+        message: `Are you sure you want to restore snapshot "${fileName}"? This will overwrite your current database. The page will reload once restore finishes.`,
+        confirmText: "Restore Snapshot",
+        danger: true,
+        onConfirm: async () => {
+            const overlay = document.getElementById("restore-overlay-modal");
+            const overlayTitle = document.getElementById("restore-overlay-title");
+            const overlayMsg = document.getElementById("restore-overlay-msg");
+            if (overlay) overlay.style.display = "flex";
+            if (overlayTitle) overlayTitle.innerText = "Restoring Database...";
+            if (overlayMsg) overlayMsg.innerText = "Draining connections and applying SQLite snapshot. Please wait...";
+
+            try {
+                const res = await fetch(`/api/snapshots/${id}/restore`, { method: "POST" });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(errText || "Failed to restore snapshot");
+                }
+                if (overlayTitle) overlayTitle.innerText = "Restore Complete!";
+                if (overlayMsg) overlayMsg.innerText = "Database successfully restored. Reloading page...";
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } catch (err) {
+                if (overlay) overlay.style.display = "none";
+                showToast("Restore failed: " + err.message, "error", 6000);
+            }
+        }
+    });
+}
+
+function downloadSnapshot(id) {
+    window.location.href = `/api/snapshots/${id}/download`;
+}
+
+function confirmDeleteSnapshot(id, fileName) {
+    showConfirmDialog({
+        title: "Delete Snapshot",
+        message: `Are you sure you want to delete snapshot "${fileName}" (Telegram Msg #${id}) from the Storage Channel?`,
+        confirmText: "Delete Snapshot",
+        danger: true,
+        onConfirm: async () => {
+            try {
+                const res = await fetch(`/api/snapshots/${id}`, { method: "DELETE" });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(errText || "Failed to delete snapshot");
+                }
+                showToast("Snapshot deleted from Telegram Storage Channel", "success");
+                loadSnapshotsContent();
+            } catch (err) {
+                showToast("Delete failed: " + err.message, "error");
+            }
+        }
+    });
+}
+
+function handleSnapshotFileSelect(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+
+    // Reset input value so same file can be re-selected if needed
+    event.target.value = "";
+
+    showConfirmDialog({
+        title: "Upload & Restore Snapshot",
+        message: `Are you sure you want to restore from "${file.name}"? Current database contents will be replaced with this backup file.`,
+        confirmText: "Upload & Overwrite",
+        danger: true,
+        onConfirm: async () => {
+            const overlay = document.getElementById("restore-overlay-modal");
+            const overlayTitle = document.getElementById("restore-overlay-title");
+            const overlayMsg = document.getElementById("restore-overlay-msg");
+            if (overlay) overlay.style.display = "flex";
+            if (overlayTitle) overlayTitle.innerText = "Uploading & Restoring...";
+            if (overlayMsg) overlayMsg.innerText = "Uploading local snapshot and applying to database. Please wait...";
+
+            const formData = new FormData();
+            formData.append("snapshot", file);
+
+            try {
+                const res = await fetch("/api/snapshots/upload-restore", {
+                    method: "POST",
+                    body: formData
+                });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(errText || "Upload restore failed");
+                }
+                if (overlayTitle) overlayTitle.innerText = "Restore Complete!";
+                if (overlayMsg) overlayMsg.innerText = "Local backup successfully restored. Reloading page...";
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } catch (err) {
+                if (overlay) overlay.style.display = "none";
+                showToast("Upload restore failed: " + err.message, "error", 6000);
             }
         }
     });
@@ -1149,6 +1337,18 @@ function formatDate(dateStr) {
         month: "short",
         day: "numeric",
         year: "numeric"
+    });
+}
+
+function formatDateTime(dateStr) {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
     });
 }
 

@@ -40,6 +40,18 @@ _Avoid_: Temporary file, buffer cache, spool
 A compressed point-in-time copy of the SQLite database uploaded to the Storage Channel to guarantee zero metadata loss if server storage is destroyed.
 _Avoid_: Backup dump, state export, replica
 
+**Snapshot History**:
+A chronological log of all Database Snapshots residing in the Storage Channel.
+_Avoid_: Backup logs, snapshot list, dump history
+
+**Snapshot Retention Policy**:
+The automated pruning rule that preserves a fixed count of recent Database Snapshots while deleting older snapshot messages from the Storage Channel.
+_Avoid_: Auto-clean, backup expiry, cleanup rule
+
+**Point-in-Time Restore**:
+The recovery process of replacing the live SQLite database with a specific historical Database Snapshot selected from the Snapshot History.
+_Avoid_: Database rollback, state rewind, undo
+
 **Range Request**:
 An HTTP 206 request translated on-the-fly into specific MTProto Part offsets to enable instant video seeking and media preview.
 _Avoid_: Partial download, slice streaming
