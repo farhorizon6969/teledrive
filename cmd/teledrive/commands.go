@@ -112,6 +112,23 @@ func runServer(cfg *app.Config) {
 		}
 	}()
 
+	startPort, _ := strconv.Atoi(cfg.Port)
+	if startPort <= 0 {
+		startPort = 8080
+	}
+
+	listener, boundPort, err := web.FindAvailableListener(cfg.Host, startPort, 50)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Network error: %v\n", err)
+		return
+	}
+	defer listener.Close()
+
+	if boundPort != startPort {
+		fmt.Printf("\n⚠️ Port %d is already in use. Automatically switched to available port: %d\n", startPort, boundPort)
+	}
+	cfg.Port = strconv.Itoa(boundPort)
+
 	srv, err := web.NewServer(cfg, database, mgr)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to initialize web server: %v\n", err)
@@ -119,7 +136,6 @@ func runServer(cfg *app.Config) {
 	}
 
 	httpServer := &http.Server{
-		Addr:    ":" + cfg.Port,
 		Handler: srv,
 	}
 
@@ -136,11 +152,15 @@ func runServer(cfg *app.Config) {
 		cancel()
 	}()
 
-	fmt.Printf("\n🚀 TeleDrive Web Dashboard running at: http://localhost:%s\n", cfg.Port)
-	fmt.Printf("🔒 Storage Mode: Telegram MTProto Safe Mode (Primary Account Protected)\n")
+	fmt.Printf("\n🚀 TeleDrive Web Dashboard is running:\n")
+	fmt.Printf("   > Local:   http://localhost:%d\n", boundPort)
+	for _, ip := range web.GetLocalIPs() {
+		fmt.Printf("   > Network: http://%s:%d\n", ip, boundPort)
+	}
+	fmt.Printf("\n🔒 Storage Mode: Telegram MTProto Safe Mode (Primary Account Protected)\n")
 	fmt.Printf("🔑 Default Admin Password: %s\n\n", cfg.AdminPassword)
 
-	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := httpServer.Serve(listener); err != nil && err != http.ErrServerClosed {
 		fmt.Fprintf(os.Stderr, "HTTP server error: %v\n", err)
 	}
 }
