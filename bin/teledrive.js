@@ -12,7 +12,8 @@ const https = require('node:https');
 const os = require('node:os');
 const path = require('node:path');
 
-const VERSION = '1.2.0';
+const VERSION = '1.2.1';
+const BINARY_VERSION = '1.2.0';
 
 // Map process.platform to TeleDrive release platform name
 const PLATFORM_MAP = {
@@ -48,7 +49,7 @@ function findLocalBinary() {
   }
 
   // 2. Local cache directory
-  const cached = path.join(getCacheDir(), `teledrive-v${VERSION}${process.platform === 'win32' ? '.exe' : ''}`);
+  const cached = path.join(getCacheDir(), `teledrive-v${BINARY_VERSION}${process.platform === 'win32' ? '.exe' : ''}`);
   if (fs.existsSync(cached)) {
     return cached;
   }
@@ -99,6 +100,27 @@ function downloadUrl(url, destPath) {
   });
 }
 
+function extractArchive(archivePath, destDir, platform) {
+  if (platform === 'windows') {
+    // 1. Try Windows tar (tar -xf handles .zip on Windows 10/11)
+    const tarResult = spawnSync('tar', ['-xf', archivePath, '-C', destDir], { stdio: 'inherit' });
+    if (tarResult.status === 0) return;
+
+    // 2. Fallback to PowerShell Expand-Archive (built into all modern Windows systems)
+    const psCmd = `Expand-Archive -LiteralPath '${archivePath}' -DestinationPath '${destDir}' -Force`;
+    const psResult = spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', psCmd], { stdio: 'inherit' });
+    if (psResult.status === 0) return;
+
+    throw new Error(`Failed to extract Windows archive via tar or PowerShell.`);
+  }
+
+  // Linux and macOS: tar -xzf
+  const extractResult = spawnSync('tar', ['-xzf', archivePath, '-C', destDir], { stdio: 'inherit' });
+  if (extractResult.status !== 0) {
+    throw new Error(`tar extraction failed with exit code ${extractResult.status}`);
+  }
+}
+
 async function ensureBinary() {
   const existing = findLocalBinary();
   if (existing) return existing;
@@ -113,21 +135,18 @@ async function ensureBinary() {
   const cacheDir = getCacheDir();
   fs.mkdirSync(cacheDir, { recursive: true });
 
-  const binTarget = path.join(cacheDir, `teledrive-v${VERSION}${process.platform === 'win32' ? '.exe' : ''}`);
-  const archiveName = `teledrive-v${VERSION}-${platform}-${arch}.tar.gz`;
+  const binTarget = path.join(cacheDir, `teledrive-v${BINARY_VERSION}${process.platform === 'win32' ? '.exe' : ''}`);
+  const ext = (platform === 'windows') ? '.zip' : '.tar.gz';
+  const archiveName = `teledrive-v${BINARY_VERSION}-${platform}-${arch}${ext}`;
   const downloadArchive = path.join(cacheDir, archiveName);
-  const releaseUrl = `https://github.com/herliansyah/teledrive/releases/download/v${VERSION}/${archiveName}`;
+  const releaseUrl = `https://github.com/herliansyah/teledrive/releases/download/v${BINARY_VERSION}/${archiveName}`;
 
-  console.log(`[teledrive] Binary not found locally. Downloading TeleDrive v${VERSION} for ${platform}/${arch}...`);
+  console.log(`[teledrive] Binary not found locally. Downloading TeleDrive v${BINARY_VERSION} for ${platform}/${arch}...`);
 
   try {
     await downloadUrl(releaseUrl, downloadArchive);
 
-    // Extract using system tar
-    const extractResult = spawnSync('tar', ['-xzf', downloadArchive, '-C', cacheDir], { stdio: 'inherit' });
-    if (extractResult.status !== 0) {
-      throw new Error(`tar extraction failed with exit code ${extractResult.status}`);
-    }
+    extractArchive(downloadArchive, cacheDir, platform);
 
     // Clean up archive
     try { fs.unlinkSync(downloadArchive); } catch (_) {}
