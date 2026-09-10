@@ -1,0 +1,40 @@
+{
+  "name": "teledrive",
+  "version": "1.2.0",
+  "description": "High-Capacity Cloud Storage Powered by Telegram MTProto Infrastructure",
+  "main": "bin/teledrive.js",
+  "bin": {
+    "teledrive": "./bin/teledrive.js"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": [
+    "telegram",
+    "cloud-storage",
+    "drive",
+    "mtproto",
+    "file-manager",
+    "cli",
+    "self-hosted",
+    "web-drive"
+  ],
+  "author": "Herliansyah (https://github.com/herliansyah)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/herliansyah/teledrive.git"
+  },
+  "bugs": {
+    "url": "https://github.com/herliansyah/teledrive/issues"
+  },
+  "homepage": "https://github.com/herliansyah/teledrive#readme",
+  "publishConfig": {
+    "access": "public"
+  }
+}

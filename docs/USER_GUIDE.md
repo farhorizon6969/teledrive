@@ -59,6 +59,10 @@ TeleDrive leverages Telegram's official document storage infrastructure:
 Before running the web dashboard, link your Telegram account using the interactive terminal wizard:
 
 ```bash
+# Via npx (recommended for Node.js / npm users):
+npx teledrive login
+
+# Or via pre-compiled binary:
 ./teledrive login
 ```
 
@@ -76,6 +80,10 @@ Before running the web dashboard, link your Telegram account using the interacti
 #### Step 2: Launching the Web Dashboard
 
 ```bash
+# Via npx:
+npx teledrive server
+
+# Or via binary:
 ./teledrive server
 ```
 
@@ -196,6 +204,10 @@ TeleDrive memanfaatkan infrastruktur penyimpanan dokumen resmi Telegram:
 Sebelum menyalakan server web, hubungkan akun Telegram Anda melalui wizard terminal:
 
 ```bash
+# Jalankan via npx (direkomendasikan untuk pengguna Node.js / npm):
+npx teledrive login
+
+# Atau jalankan binary kompilasi langsung:
 ./teledrive login
 ```
 
@@ -213,6 +225,10 @@ Sebelum menyalakan server web, hubungkan akun Telegram Anda melalui wizard termi
 #### Langkah 2: Menjalankan Server Web Dashboard
 
 ```bash
+# Jalankan via npx:
+npx teledrive server
+
+# Atau jalankan via binary:
 ./teledrive server
 ```
 

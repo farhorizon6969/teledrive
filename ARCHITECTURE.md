@@ -242,7 +242,10 @@ teledrive/
 │       ├── 0007-aes-gcm-session-encryption.md
 │       ├── 0008-primary-account-tos-safe-mode.md
 │       ├── 0009-zero-build-embedded-modern-ui.md
-│       └── 0010-database-snapshots-and-rolling-retention.md
+│       ├── 0010-database-snapshots-and-rolling-retention.md
+│       └── 0011-npm-distribution-wrapper.md
+├── bin/
+│   └── teledrive.js             # Zero-dependency npm launcher wrapper
 ├── cmd/
 │   └── teledrive/
 │       └── main.go              # CLI router (server, login, upload, list, backup)
@@ -265,7 +268,9 @@ teledrive/
 │       ├── server.go            # net/http ServeMux routes & middleware
 │       ├── handlers_drive.go    # File/folder operations & uploads
 │       ├── handlers_share.go    # Public /s/{token} & /api/shares management
+│       ├── handlers_snapshot.go # Web snapshot history & restore
 │       └── static/              # Embedded UI assets (CSS design tokens, Lucide SVG, Vanilla JS)
+├── package.json                 # npm metadata & bin entry
 ├── go.mod
 └── go.sum
 ```

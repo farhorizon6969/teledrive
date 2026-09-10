@@ -9,6 +9,7 @@
 [![Go Version](https://img.shields.io/badge/Go-1.22%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
 [![Author](https://img.shields.io/badge/Author-Herliansyah-purple?style=flat&logo=github)](https://github.com/herliansyah)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![npm version](https://img.shields.io/npm/v/teledrive.svg?style=flat&logo=npm)](https://www.npmjs.com/package/teledrive)
 [![GitHub](https://img.shields.io/badge/GitHub-herliansyah%2Fteledrive-181717?style=flat&logo=github)](https://github.com/herliansyah/teledrive)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20macOS%20%7C%20Windows-blue)](https://github.com/herliansyah/teledrive)
 [![Pure Go](https://img.shields.io/badge/CGO-Zero%20(Pure%20Go)-orange)](https://modernc.org/sqlite)
@@ -68,7 +69,26 @@ Download the latest pre-compiled binary for your operating system:
 
 ### 🚀 Quick Start Guide
 
-#### 1. Setup & Telegram Pairing (First Time Only)
+#### ⚡ Run Instantly with `npx` (No installation or compiler required!)
+
+If you have Node.js installed, you can launch TeleDrive directly without downloading binaries or installing Go:
+
+```bash
+# Pair your Telegram account:
+npx teledrive login
+
+# Launch the Web Dashboard:
+npx teledrive server
+
+# Or install globally as a system command:
+npm install -g teledrive
+```
+
+---
+
+#### 📦 Or Run the Pre-compiled Binary Directly
+
+##### 1. Setup & Telegram Pairing (First Time Only)
 
 Obtain your personal `API_ID` and `API_HASH` from [my.telegram.org](https://my.telegram.org) (Application Type: Desktop). Then run the interactive terminal wizard:
 
@@ -182,7 +202,26 @@ Developed and maintained by **Herliansyah**:
 
 ### 🚀 Cara Penggunaan Singkat
 
-#### 1. Pasangkan Akun Telegram Anda (Login Pertama Kali)
+#### ⚡ Jalankan Instan dengan `npx` (Tanpa install Go / unduh manual)
+
+Jika di komputer Anda sudah terpasang Node.js, Anda bisa langsung menjalankan TeleDrive dalam hitungan detik:
+
+```bash
+# Pasangkan akun Telegram Anda:
+npx teledrive login
+
+# Jalankan server Web Dashboard:
+npx teledrive server
+
+# Atau instal secara global di sistem:
+npm install -g teledrive
+```
+
+---
+
+#### 📦 Atau Jalankan Binary Kompilasi Langsung
+
+##### 1. Pasangkan Akun Telegram Anda (Login Pertama Kali)
 Dapatkan `API_ID` dan `API_HASH` Anda dari [my.telegram.org](https://my.telegram.org), lalu jalankan:
 ```bash
 ./teledrive login

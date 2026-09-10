@@ -59,3 +59,11 @@ _Avoid_: Partial download, slice streaming
 **Share Link**:
 A time-bounded, optionally password-protected public URL granting guest access to stream or download a specific virtual file.
 _Avoid_: Public link, invite link
+
+**npm Distribution Wrapper**:
+A zero-dependency Node.js launcher package on the npm registry that automatically detects host architecture, lazily caches, and executes the native TeleDrive binary.
+_Avoid_: Node SDK, JS rewrite, npm port
+
+**Binary Cache**:
+The local filesystem location where pre-compiled native TeleDrive executables are stored across runner executions.
+_Avoid_: Temp folder, binary download directory
