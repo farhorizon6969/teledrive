@@ -1,0 +1,13 @@
+# Binaries
+/teledrive
+*.exe
+
+# Databases
+*.db
+*.db-wal
+*.db-shm
+
+# Secrets & Keys
+*.key
+.env
+.teledrive.key

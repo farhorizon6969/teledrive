@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeleDrive Login</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body style="align-items: center; justify-content: center;">
+    <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 32px; width: 100%; max-width: 380px; text-align: center;">
+        <div style="font-size: 2.5rem; margin-bottom: 8px;">⚡</div>
+        <h2 style="margin-bottom: 8px;">TeleDrive</h2>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 24px;">Personal Telegram Cloud Storage</p>
+
+        {{if .Error}}
+        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); border-radius: 8px; padding: 10px; margin-bottom: 16px; font-size: 0.85rem;">
+            {{.Error}}
+        </div>
+        {{end}}
+
+        <form method="POST" action="/login" style="display: flex; flex-direction: column; gap: 16px;">
+            <input type="password" name="password" class="search-input" placeholder="Enter Admin Password" required autofocus>
+            <button type="submit" class="btn-upload" style="width: 100%;">Sign In</button>
+        </form>
+    </div>
+</body>
+</html>
