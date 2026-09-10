@@ -12,7 +12,7 @@ const https = require('node:https');
 const os = require('node:os');
 const path = require('node:path');
 
-const VERSION = '1.2.1';
+const VERSION = '1.2.2';
 const BINARY_VERSION = '1.2.0';
 
 // Map process.platform to TeleDrive release platform name
