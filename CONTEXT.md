@@ -10,7 +10,7 @@ _Avoid_: Directory, chat folder, album
 
 **Storage Channel**:
 A dedicated private Telegram channel used exclusively by TeleDrive as an object store for file parts and database snapshots.
-_Avoid_: Chat, saved messages, drive folder
+_Avoid_: Chat, saved messages, drive folder, vault channel
 
 **Part**:
 A 512 KB data segment transferred to or from Telegram servers via MTProto `upload.saveBigFilePart` or `upload.getFile`.

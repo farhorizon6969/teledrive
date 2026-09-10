@@ -85,6 +85,7 @@ func (s *Server) handleShareLanding(w http.ResponseWriter, r *http.Request) {
 		"IsAudio":        strings.HasPrefix(file.MimeType, "audio/"),
 		"IsImage":        strings.HasPrefix(file.MimeType, "image/"),
 		"IsPDF":          file.MimeType == "application/pdf",
+		"IsText":         strings.HasPrefix(file.MimeType, "text/") || strings.HasSuffix(file.Name, ".json") || strings.HasSuffix(file.Name, ".md") || strings.HasSuffix(file.Name, ".txt"),
 	}
 
 	_ = s.templates.ExecuteTemplate(w, "share.html", data)
@@ -220,3 +221,27 @@ func formatBytes(b int64) string {
 	}
 	return fmt.Sprintf("%.2f %cB", float64(b)/float64(div), "KMGTPE"[exp])
 }
+
+func (s *Server) handleListShares(w http.ResponseWriter, r *http.Request) {
+	shares, err := s.db.ListShareLinks()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(shares)
+}
+
+func (s *Server) handleDeleteShare(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		http.Error(w, "missing share id", http.StatusBadRequest)
+		return
+	}
+	if err := s.db.DeleteShareLink(id); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+

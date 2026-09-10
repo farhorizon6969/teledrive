@@ -106,4 +106,45 @@ func TestWebServer_AuthAndFolderAPI(t *testing.T) {
 	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "Projects") {
 		t.Fatalf("Expected folder list with 'Projects', got: %s", rec.Body.String())
 	}
+
+	// 7. Create a file & share link, then test GET /api/shares & DELETE /api/shares/{id}
+	file, err := database.CreateFile(nil, "doc.pdf", 2048, "application/pdf", 11, "tg_1", "hash_1", "sha_1")
+	if err != nil {
+		t.Fatalf("CreateFile failed: %v", err)
+	}
+
+	sharePayload, _ := json.Marshal(map[string]any{"file_id": file.ID})
+	req = httptest.NewRequest("POST", "/api/share", bytes.NewReader(sharePayload))
+	req.Header.Set("Content-Type", "application/json")
+	req.AddCookie(authCookie)
+	rec = httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("Expected 201 Created for share, got %d", rec.Code)
+	}
+
+	// GET /api/shares
+	req = httptest.NewRequest("GET", "/api/shares", nil)
+	req.AddCookie(authCookie)
+	rec = httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "doc.pdf") {
+		t.Fatalf("Expected shares list containing 'doc.pdf', got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var shares []db.ShareLinkInfo
+	_ = json.Unmarshal(rec.Body.Bytes(), &shares)
+	if len(shares) == 0 {
+		t.Fatalf("Expected at least 1 share in list")
+	}
+
+	// DELETE /api/shares/{id}
+	req = httptest.NewRequest("DELETE", "/api/shares/"+shares[0].ID, nil)
+	req.AddCookie(authCookie)
+	rec = httptest.NewRecorder()
+	server.ServeHTTP(rec, req)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("Expected 204 No Content for delete share, got %d", rec.Code)
+	}
 }
+

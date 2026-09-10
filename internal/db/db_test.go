@@ -59,6 +59,22 @@ func TestDB_FolderAndFileOperations(t *testing.T) {
 		t.Fatalf("GetShareLink failed or returned mismatch")
 	}
 
+	// 6b. List and Delete ShareLink
+	shares, err := database.ListShareLinks()
+	if err != nil || len(shares) != 1 {
+		t.Fatalf("ListShareLinks failed, expected 1, got %d: %v", len(shares), err)
+	}
+	if shares[0].FileName != "report.pdf" {
+		t.Fatalf("ListShareLinks expected FileName 'report.pdf', got '%s'", shares[0].FileName)
+	}
+	if err := database.DeleteShareLink(share.ID); err != nil {
+		t.Fatalf("DeleteShareLink failed: %v", err)
+	}
+	shares, err = database.ListShareLinks()
+	if err != nil || len(shares) != 0 {
+		t.Fatalf("Expected 0 shares after delete, got %d", len(shares))
+	}
+
 	// 7. Delete folder (cascading check)
 	err = database.DeleteFolder(root.ID)
 	if err != nil {

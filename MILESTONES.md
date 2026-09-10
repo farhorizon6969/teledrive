@@ -71,14 +71,18 @@ This roadmap outlines the implementation phases for TeleDrive. In accordance wit
 
 ---
 
-## Milestone 6: Embedded Web Dashboard & Secure Share Links
+## Milestone 6: Modern Embedded Web Dashboard & Share Link Management (Completed)
 
-**Goal**: Build the single-binary web dashboard using Go 1.22 `net/http`, embedded HTML5/Tailwind/Alpine templates, drag-and-drop chunked uploader, and public share links.
+**Goal**: Deliver a polished, modern, zero-build web interface using Go 1.22 `net/http`, embedded HTML5/CSS design tokens, modern Vanilla JS, Lucide SVG iconography, resumable chunked upload drawer, and full share link management.
 
 * **Key Deliverables**:
-  - `internal/web/server.go`: Go 1.22+ `http.ServeMux` router with embedded static assets (`web/static` and `web/templates`).
-  - Web UI: Google Drive-like explorer interface (tree sidebar, file grid/list view, breadcrumb navigation, dark/light theme, search bar).
-  - Browser Chunked Uploader: Vanilla JS/Alpine upload manager splitting files into 5 MB chunks via `File.slice()` with real-time progress bar.
-  - Public Share Links (`/s/{token}`): Branded landing page with inline video/audio/image preview player, password unlock form, and direct download endpoint (`?dl=1`).
+  - `internal/web/server.go`: Go 1.22+ `http.ServeMux` router serving embedded assets (`templates/*` and `static/*`) with zero external build tooling.
+  - Modern Design System (`style.css`): Slate/Zinc palette, Dark & Light theme toggle with `localStorage` persistence, responsive mobile drawer, and accessible custom modals.
+  - Explorer Interface (`app.js`, `index.html`): Dual-view toggle (Grid View vs Table/List View), instant in-memory column sorting (Name, Size, Modified Date), and debounced search with clear state.
+  - Floating Upload Manager: Bottom-right collapsible drawer with real-time chunk assembly tracking (`Chunk 3/8`), minimizable pill state, and sequential safe-mode processing.
+  - Expanded Media & Document Viewer: Pass-through range-seek video streaming (HTTP 206), audio player, image/PDF viewer, and monospaced code/text preview.
+  - Public Share & Management (`/s/{token}`, `GET /api/shares`, `DELETE /api/shares/{id}`): Public landing page with mobile QR Code generator, password protection, and dashboard view to audit and revoke active links.
+  - Architecture Record: Documented in `docs/adr/0009-zero-build-embedded-modern-ui.md`.
 * **Runnable Verification**:
-  - Start `teledrive server`, log into the dashboard via browser, drag and drop a large video file, seek playback in the embedded video player, and generate a password-protected share link tested in an incognito window.
+  - Full automated integration suite passing (`go test ./...`), including authenticated API operations, share link listing and revocation, and successful compilation into a standalone static binary (`go build ./cmd/teledrive`).
+

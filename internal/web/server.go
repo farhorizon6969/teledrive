@@ -82,6 +82,8 @@ func (s *Server) routes() {
 
 	// Share Links
 	s.mux.HandleFunc("POST /api/share", s.authMiddleware(s.handleCreateShare))
+	s.mux.HandleFunc("GET /api/shares", s.authMiddleware(s.handleListShares))
+	s.mux.HandleFunc("DELETE /api/shares/{id}", s.authMiddleware(s.handleDeleteShare))
 	s.mux.HandleFunc("GET /s/{token}", s.handleShareLanding)
 	s.mux.HandleFunc("POST /s/{token}/unlock", s.handleShareUnlock)
 	s.mux.HandleFunc("GET /s/{token}/stream", s.handleShareStream)

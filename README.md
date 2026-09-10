@@ -24,7 +24,15 @@
 
 ### ✨ Key Features
 
-- **🚀 Single Static Binary (Zero CGO)**: Built with pure Go (`modernc.org/sqlite` and `gotd/td`). Runs anywhere with zero external dependencies.
+- **🎨 Modern Zero-Build Web Interface**:
+  - Dark & Light mode toggle with persistent state in local storage.
+  - Dual-view explorer: instant toggle between **Grid View** (visual file cards) and **Table/List View** with instant in-memory column sorting (Name, Size, Modified Date).
+  - Floating Upload Manager Drawer at bottom-right with real-time chunk progress (`Chunk 3/8`), minimizable pill state, and sequential safe-mode processing.
+  - Crisp embedded Lucide SVG vector icons with zero additional network requests.
+  - In-app non-intrusive toast notifications and custom modal dialogs (replacing native browser alerts/prompts).
+  - Shared Links Management view in dashboard to audit active links, copy URLs, review downloads, and revoke access.
+  - Expanded media and code viewer: seekable video (HTTP 206), audio, image, PDF, and syntax/plain text viewer for code files (`.txt`, `.md`, `.json`, `.go`, `.py`, `.log`).
+  - Built-in **Mobile QR Code Generator** on public share links for frictionless smartphone handoff.
 - **📁 Virtual File System**: Full hierarchical folder management (create, rename, move with cycle prevention, delete, search) backed by SQLite with WAL mode.
 - **⚡ Resumable Chunked Upload**: Browser slices files into 5 MB chunks and streams them directly into 512 KB MTProto parts with zero VPS disk wear.
 - **🎬 Instant Media Streaming (HTTP 206 Range)**: Stream and seek large videos, audio, images, and PDFs in real-time without downloading the complete file first.
@@ -131,8 +139,17 @@ Open your browser and navigate to:
 **TeleDrive** adalah jembatan penyimpanan awan (*cloud storage*) berbasis Go (single binary) yang memanfaatkan infrastruktur Telegram sebagai backend penyimpanan melalui protokol resmi **MTProto** (`gotd/td`). Dengan TeleDrive, Anda dapat menikmati kapasitas upload hingga **2 GB (akun reguler)** atau **4 GB (akun Telegram Premium)** per file dengan tampilan web mirip Google Drive.
 
 ### 🎯 Fitur Unggulan
-
-- **Single Binary Portabel**: Kompilasi 100% Pure Go tanpa dependensi compiler C/gcc (zero CGO).
+ 
+- **Single Binary Portabel (Zero CGO)**: Kompilasi 100% Pure Go tanpa dependensi compiler C/gcc (`modernc.org/sqlite` dan `gotd/td`).
+- **Antarmuka Web Modern (Zero-Build)**:
+  - Dukungan Dark & Light Mode dengan toggle instan dan penyimpanan preferensi di browser.
+  - Mode tampilan ganda: **Grid View** (kartu file interaktif) dan **Table/List View** (tabel detail dengan sorting instan Nama, Ukuran, dan Tanggal).
+  - Floating Upload Manager Drawer di pojok kanan bawah dengan pemantauan per-chunk progresif (`Chunk 3/8`) dan antrean sekuensial aman dari *Flood Wait*.
+  - Ikon vektor modern Lucide SVG resolusi tinggi tanpa penambahan request HTTP.
+  - Notifikasi toast dan dialog modal elegan (tanpa `alert`, `confirm`, atau `prompt` bawaan browser).
+  - Tab Manajemen Shared Links di dashboard untuk memantau, menyalin URL, dan mencabut (*revoke*) link berbagi aktif.
+  - Penampil pratinjau media dan dokumen teks/kode (`.txt`, `.md`, `.json`, `.go`, `.py`, dll).
+  - Fitur **QR Code Generator** pada link publik untuk unduhan instan langsung dari smartphone.
 - **Struktur Folder Virtual**: Mengatur hierarki folder, memindahkan file (*move* dengan proteksi siklus), rename, hapus permanen, dan pencarian cepat berbasis SQLite WAL.
 - **Upload Chunked Resumable**: File dipotong menjadi chunk 5MB di browser dan dialirkan langsung ke part 512KB MTProto tanpa memenuhi disk server VPS.
 - **Streaming Media Langsung (HTTP 206)**: Menonton video besar, memutar audio, atau membuka dokumen PDF langsung di browser tanpa perlu mengunduh seluruh file terlebih dahulu.

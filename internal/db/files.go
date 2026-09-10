@@ -320,3 +320,49 @@ func (d *DB) IncrementShareDownload(token string) error {
 	_, err := d.Exec("UPDATE share_links SET download_count = download_count + 1 WHERE token = ?", token)
 	return err
 }
+
+type ShareLinkInfo struct {
+	ID            string     `json:"id"`
+	Token         string     `json:"token"`
+	FileID        string     `json:"file_id"`
+	FileName      string     `json:"file_name"`
+	FileSize      int64      `json:"file_size"`
+	HasPassword   bool       `json:"has_password"`
+	ExpiresAt     *time.Time `json:"expires_at"`
+	DownloadCount int        `json:"download_count"`
+	MaxDownloads  *int       `json:"max_downloads"`
+	CreatedAt     time.Time  `json:"created_at"`
+}
+
+// ListShareLinks returns all active public share links joined with file metadata.
+func (d *DB) ListShareLinks() ([]ShareLinkInfo, error) {
+	rows, err := d.Query(`
+		SELECT s.id, s.token, s.file_id, COALESCE(f.name, 'Deleted File'), COALESCE(f.size, 0),
+		       (s.password_hash IS NOT NULL AND s.password_hash != ''),
+		       s.expires_at, s.download_count, s.max_downloads, s.created_at
+		FROM share_links s
+		LEFT JOIN files f ON s.file_id = f.id
+		ORDER BY s.created_at DESC
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var shares []ShareLinkInfo
+	for rows.Next() {
+		var s ShareLinkInfo
+		if err := rows.Scan(&s.ID, &s.Token, &s.FileID, &s.FileName, &s.FileSize, &s.HasPassword, &s.ExpiresAt, &s.DownloadCount, &s.MaxDownloads, &s.CreatedAt); err != nil {
+			return nil, err
+		}
+		shares = append(shares, s)
+	}
+	return shares, rows.Err()
+}
+
+// DeleteShareLink removes a public share link by its ID or token.
+func (d *DB) DeleteShareLink(id string) error {
+	_, err := d.Exec("DELETE FROM share_links WHERE id = ? OR token = ?", id, id)
+	return err
+}
+

@@ -10,10 +10,10 @@ TeleDrive is a single-binary cloud storage system that bridges a web interface a
 +---------------------------------------------------------------------------------+
 |                                TeleDrive Host                                   |
 |                                                                                 |
-|  +---------------------+   +-------------------------+   +-------------------+  |
-|  |   Web UI (Browser)  |   |   Embedded Dashboard    |   |     CLI Tool      |  |
-|  |  (HTML5/Alpine/CSS) |<->| (net/http + templates)  |<->| (teledrive login) |  |
-|  +---------------------+   +-------------------------+   +-------------------+  |
+|  +--------------------------+   +-------------------------+   +-------------------+  |
+|  |     Web UI (Browser)     |   |   Embedded Dashboard    |   |     CLI Tool      |  |
+|  | (HTML5/Vanilla/CSS/SVG)  |<->| (net/http + templates)  |<->| (teledrive login) |  |
+|  +--------------------------+   +-------------------------+   +-------------------+  |
 |                                         |                                       |
 |                                         v                                       |
 |                        +---------------------------------+                      |
@@ -235,7 +235,9 @@ teledrive/
 │   ├── 0004-modernc-sqlite-pure-go.md
 │   ├── 0005-stdlib-net-http.md
 │   ├── 0006-chunked-resumable-http-upload.md
-│   └── 0007-aes-gcm-session-encryption.md
+│   ├── 0007-aes-gcm-session-encryption.md
+│   ├── 0008-primary-account-tos-safe-mode.md
+│   └── 0009-zero-build-embedded-modern-ui.md
 ├── cmd/
 │   └── teledrive/
 │       └── main.go              # CLI router (server, login, upload, list, backup)
@@ -257,8 +259,8 @@ teledrive/
 │   └── web/
 │       ├── server.go            # net/http ServeMux routes & middleware
 │       ├── handlers_drive.go    # File/folder operations & uploads
-│       ├── handlers_share.go    # Public /s/{token} endpoints
-│       └── static/              # Embedded UI assets (templates, Tailwind, Alpine)
+│       ├── handlers_share.go    # Public /s/{token} & /api/shares management
+│       └── static/              # Embedded UI assets (CSS design tokens, Lucide SVG, Vanilla JS)
 ├── go.mod
 └── go.sum
 ```
