@@ -20,4 +20,4 @@ COPY --from=builder /teledrive /usr/local/bin/teledrive
 
 EXPOSE 8080
 
-ENTRYPOINT ["teledrive"]
+ENTRYPOINT ["teledrive","server"]
